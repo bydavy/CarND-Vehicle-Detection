@@ -1,0 +1,5 @@
+.DS_Store
+output_images
+.idea
+data
+__pycache__
