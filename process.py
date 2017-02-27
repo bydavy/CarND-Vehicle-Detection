@@ -1,4 +1,5 @@
 import argparse
+from collections import deque
 import glob
 import os
 import pickle
@@ -158,6 +159,7 @@ class CarTracker:
         self.cell_per_block = hog_cell_per_block
         self.hog_channel = hog_channel
         self.smooth_over = smooth_over  # Smooth detection over x images
+        self.heat_queue = None
 
     def next_image(self, img):
         """Invoked for each image composing the video.
@@ -166,25 +168,35 @@ class CarTracker:
         :returns: new image with bounding boxes around detected cars"""
         heat = np.zeros_like(img[:, :, 0]).astype(np.float)
 
-        out_img, box_list = find_cars(img, self.y_start, self.y_stop, self.scale, self.clf, self.X_scaler,
+        detection_img, box_list = find_cars(img, self.y_start, self.y_stop, self.scale, self.clf, self.X_scaler,
                                       color_space=self.color_space,
-                                      # Spatial features
                                       spatial_features=self.spatial_features, spatial_size=self.spatial_size,
-                                      # Hist features
                                       hist_features=self.hist_features, hist_bins=self.hist_bins,
-                                      # Hog features
                                       hog_features=self.hog_features, hog_orient=self.orient,
                                       hog_pix_per_cell=self.pix_per_cell,
                                       hog_cell_per_block=self.cell_per_block, hog_channel=self.hog_channel)
 
         # Add heat to each box in box list
         heat = add_heat(heat, box_list)
-        # Apply threshold to help remove false positives
         heat = apply_threshold(heat, 1)
+
+        # Add heat to the ring buffer
+        if not self.heat_queue:
+            self.heat_queue = deque(maxlen=self.smooth_over)
+        self.heat_queue.append(heat)
+
+        # Let's now smooth out the result over time
+        # Add all previous heat from ring buffer
+        acc_heat = np.zeros_like(heat)
+        for _, old_heat in enumerate(self.heat_queue):
+            acc_heat = np.add(acc_heat, old_heat)
+
+        # Apply threshold to help remove false positives
+        acc_heat = apply_threshold(acc_heat, self.smooth_over * .8)
         # Visualize the heatmap when displaying
-        heatmap = np.clip(heat, 0, 255)
+        acc_heatmap = np.clip(acc_heat, 0, 255)
         # Find final boxes from heatmap using label function
-        labels = label(heatmap)
+        labels = label(acc_heatmap)
         draw_img = draw_labeled_bboxes(np.copy(img), labels)
 
         return draw_img
@@ -218,7 +230,7 @@ if __name__ == "__main__":
             out_img = carTracker.next_image(img)
             cv2.imwrite(output_file, cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
         elif ".mp4" == file_extension.lower():
-            carTracker.smooth_over = 5  # Smooth detection over x images
+            carTracker.smooth_over = 5  # Smooth detection over 1sec/25fps*5=0.2 secs
             clip = VideoFileClip(file)
             output_clip = clip.fl_image(carTracker.next_image)
             output_clip.write_videofile(output_file, audio=False)
