@@ -1,3 +1,4 @@
+import argparse
 import glob
 import pickle
 import time
@@ -30,6 +31,11 @@ hog_cell_per_block = 2
 hog_channel = "ALL"  # Can be 0, 1, 2, or "ALL"
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Train classifier to detect cars')
+    parser.add_argument('-o', '--output', default=save_file,
+                        help='path to save the model')
+    args = parser.parse_args()
+
     # Read images filename
     cars = glob.glob(vehicles_data, recursive=True)
     non_cars = glob.glob(non_vehicles_data, recursive=True)
@@ -109,5 +115,5 @@ if __name__ == "__main__":
     data['hist_features'] = hist_features
     if hist_features:
         data['hist_bins'] = hist_bins
-    pickle.dump(data, open(save_file, "wb"))
-    print("Model saved to", save_file)
+    pickle.dump(data, open(args.output, "wb"))
+    print("Model saved to", args.output)
