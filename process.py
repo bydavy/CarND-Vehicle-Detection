@@ -11,7 +11,7 @@ from common import *
 output_dir = "output_images"  # output directory
 y_start = 400  # start y coordinate for scanning
 y_stop = 656  # stop y coordinate for scanning
-scale = 1.5
+scale = 1.5  # scale to resize image to
 
 
 def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):

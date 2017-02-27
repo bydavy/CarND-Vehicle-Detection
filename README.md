@@ -22,6 +22,7 @@ Here are links to the labeled data for [vehicle](https://s3.amazonaws.com/udacit
 [non-vehicle]: ./writeup/non-vehicle.png
 [car-detection-1]: ./writeup/windows-1.jpg
 [car-detection-2]: ./writeup/windows-2.jpg
+[sliding-windows]: ./writeup/sliding-windows.jpg
 [detection-1-windows]: ./writeup/detection-1-windows.jpg[detection-2-heatmap]: ./writeup/detection-2-heatmap.jpg[detection-3-heatmap-thresholded]: ./writeup/detection-3-heatmap-thresholded.jpg[detection-4-output]: ./writeup/detection-4-output.jpg
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
@@ -57,7 +58,7 @@ For our given dataset, `YCrCb` color space and HOG parameters of `orientations=9
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM with the help of `sklearn.svm.LinearSVC` in `train.py` file. I randomly kept 20% of the dataset as a test set to compute the accuracy of my classifier. The classifier perform well, with an accuracy that is frequently above 0.98.
+I trained a linear SVM with the help of `sklearn.svm.LinearSVC` in `train.py` file. I reserved a random 20% of the dataset as a test set to compute the accuracy of my classifier. The classifier perform well, with an accuracy that is frequently above 0.98.
 
 Unfortunately, the dataset has one weakness, it contains a lot of images that have been extracted from a video stream as quite a few images seem to be similar (very little perspective or size change). This means our training set leaks into our testing set and prevents us to have a robust accuracy. I'm aware of this problem, and I decided to ignore it and focus on other challenges.
 
@@ -65,7 +66,15 @@ Unfortunately, the dataset has one weakness, it contains a lot of images that ha
 
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-!!!!!!!!!!!!!!! Work in progress !!!!!!!!!!!!!!!
+The sliding window search is implemented by `find_cars()` in `process.py`.
+
+In my implementation the windows size is fixed. They are better ways to do it with dynamic windows and it will be debated in the discussion section of this writeup.
+
+As my window size is fixed and my classifier has been trained on 64x64 images, I decided to have a window size of 64x64. This means I had to resize the image in such way that my windows size could be a bounding box for cars in the image. I came up with the x1.5 ratio. This means I blew up the input image by 1.5 in order for my window to detect cars. 
+
+Each window has an overlap of 25%, step of 16 pixels. Only plossible area of the image are searched, meaning I only scan the lower bottom of the image. This strategy results in 294 windows per image.
+
+![][sliding-windows]
 
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
@@ -110,6 +119,8 @@ Output:
 The pipeline I came up with works relatively well on the project video, but they are a few things I could improve.
 
 I already mentioned that our dataset provides a lot of images that have been extracted from the same video stream and the same tracked vehicle. This means that our training set and test set are to some degree similar, another way to see it, our training set leaks into our test set which in turn means our classifier accuracy could be more robust than it's right now. Ideally, images that are too similar should be in only one of the two sets.
+
+Sliding windows search are performed with a fixed size window. It was enough to get through the project video but it can be problematic as cars in the far distance will appear smaller than cars close to the camera. One approach to fix this would be to search the horizon with a smaller window size and search near distance with a bigger window size.
 
 Another area to explore is the fact that we apply the pipeline to a video. This means we could smooth out the detected boxes and ignore more false positives by filtering out intermittent or sporadic detections. This can be done by blending the search result of x number of images or a specified amount of time. The challenge will be to find the right balance between not delaying to much the detection of new cars appearing and filtering out false positives.  
 
