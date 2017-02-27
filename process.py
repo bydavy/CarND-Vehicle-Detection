@@ -200,6 +200,8 @@ if __name__ == "__main__":
 
     files = glob.glob(args.file, recursive=True)
     for file in files:
+        output_file = output_dir + os.sep + os.path.basename(file)
+
         carTracker = CarTracker(y_start, y_stop, scale, data['clf'], data['X_scaler'], color_space=data['color_space'],
                                 spatial_features=data['spatial_features'], spatial_size=data['spatial_size'],
                                 hist_features=data['hist_features'], hist_bins=data['hist_bins'],
@@ -212,13 +214,10 @@ if __name__ == "__main__":
         if ".jpg" == file_extension.lower():
             img = mpimg.imread(file)
             out_img = carTracker.next_image(img)
-
-            output_file = output_dir + os.sep + os.path.basename(file)
             cv2.imwrite(output_file, cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
         elif ".mp4" == file_extension.lower():
             clip = VideoFileClip(file)
             output_clip = clip.fl_image(carTracker.next_image)
-            output_file = output_dir + os.sep + os.path.basename(file)
             output_clip.write_videofile(output_file, audio=False)
         else:
             print("Unknown file format: " + args.file)
