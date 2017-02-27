@@ -140,7 +140,8 @@ class CarTracker:
     def __init__(self, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
                  spatial_features=True, spatial_size=(32, 32),
                  hist_features=True, hist_bins=32,
-                 hog_features=True, hog_orient=9, hog_pix_per_cell=8, hog_cell_per_block=2, hog_channel=0):
+                 hog_features=True, hog_orient=9, hog_pix_per_cell=8, hog_cell_per_block=2, hog_channel=0,
+                 smooth_over=1):
         self.y_start = y_start
         self.y_stop = y_stop
         self.scale = scale
@@ -156,6 +157,7 @@ class CarTracker:
         self.pix_per_cell = hog_pix_per_cell
         self.cell_per_block = hog_cell_per_block
         self.hog_channel = hog_channel
+        self.smooth_over = smooth_over  # Smooth detection over x images
 
     def next_image(self, img):
         """Invoked for each image composing the video.
@@ -199,6 +201,7 @@ if __name__ == "__main__":
 
     files = glob.glob(args.file, recursive=True)
     for file in files:
+        print("Processing", file)
         output_file = output_dir + os.sep + os.path.basename(file)
 
         carTracker = CarTracker(y_start, y_stop, scale, data['clf'], data['X_scaler'], color_space=data['color_space'],
@@ -215,9 +218,12 @@ if __name__ == "__main__":
             out_img = carTracker.next_image(img)
             cv2.imwrite(output_file, cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
         elif ".mp4" == file_extension.lower():
+            carTracker.smooth_over = 5  # Smooth detection over x images
             clip = VideoFileClip(file)
             output_clip = clip.fl_image(carTracker.next_image)
             output_clip.write_videofile(output_file, audio=False)
         else:
             print("Unknown file format: " + args.file)
             continue
+
+        print("Result saved to", output_file)
