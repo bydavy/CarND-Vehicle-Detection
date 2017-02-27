@@ -11,6 +11,12 @@ The goals / steps of this project are the following:
 
 Here are links to the labeled data for [vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip) and [non-vehicle](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip) examples to train your classifier.  These example images come from a combination of the [GTI vehicle image database](http://www.gti.ssr.upm.es/data/Vehicle_database.html), the [KITTI vision benchmark suite](http://www.cvlibs.net/datasets/kitti/), and examples extracted from the project video itself.   You are welcome and encouraged to take advantage of the recently released [Udacity labeled dataset](https://github.com/udacity/self-driving-car/tree/master/annotations) to augment your training data. 
 
+## How to execute code
+
+* First you've to download the data set and uncompress it into the data directory. See [README.md](./data/README.md).
+* Train the classifier `train.py`. Output is saved into `model.p`.
+* Detect cars in an image or video `process.py test_video.mp4`
+
 [//]: # (Image References)
 [vehicle]: ./writeup/vehicle.png
 [non-vehicle]: ./writeup/non-vehicle.png
