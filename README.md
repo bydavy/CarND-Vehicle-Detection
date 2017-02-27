@@ -14,11 +14,9 @@ Here are links to the labeled data for [vehicle](https://s3.amazonaws.com/udacit
 [//]: # (Image References)
 [vehicle]: ./writeup/vehicle.png
 [non-vehicle]: ./writeup/non-vehicle.png
-[car-detection-1]: ./output_images/test3.jpg
-[car-detection-2]: ./output_images/test4.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
+[car-detection-1]: ./writeup/windows-1.jpg
+[car-detection-2]: ./writeup/windows-2.jpg
+[detection-1-windows]: ./writeup/detection-1-windows.jpg[detection-2-heatmap]: ./writeup/detection-2-heatmap.jpg[detection-3-heatmap-thresholded]: ./writeup/detection-3-heatmap-thresholded.jpg[detection-4-output]: ./writeup/detection-4-output.jpg
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -81,21 +79,21 @@ Here's a [link to my video result](./output_images/project_video.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+It's all tacking place in `CarTracker.next_image()` in `process.py`. I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
-Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
+Positive detections:
 
-### Here are six frames and their corresponding heatmaps:
+![][detection-1-windows]
 
-![alt text][image5]
+Heatmap:
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
+![][detection-2-heatmap]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+Thresholded heatmap:
+![][detection-3-heatmap-thresholded]
 
-
+Output:
+![][detection-4-output]
 
 ---
 
