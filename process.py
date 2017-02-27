@@ -68,20 +68,24 @@ def find_cars(img, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
             # Extract the image patch
             subimg = cv2.resize(ctrans_tosearch[ytop:ytop + window, xleft:xleft + window], (64, 64))
 
-            # Get color features
-            spatial_feat = np.empty(0)
+            # Spatial features
             if spatial_features:
                 spatial_feat = get_spatial_features(subimg, size=spatial_size)
-            hist_feat = np.empty(0)
+            else:
+                spatial_feat = np.empty(0)
+            # Hist features
             if hist_features:
                 hist_feat = get_hist_features(subimg, nbins=hist_bins)
-            # Extract HOG for this patch
-            hog_feat = np.empty(0)
+            else:
+                hist_feat = np.empty(0)
+            # Hog features
             if hog_features:
                 hog_feat1 = hog1[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
                 hog_feat2 = hog2[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
                 hog_feat3 = hog3[ypos:ypos + nblocks_per_window, xpos:xpos + nblocks_per_window].ravel()
                 hog_feat = np.hstack((hog_feat1, hog_feat2, hog_feat3))
+            else:
+                hog_feat = np.empty(0)
 
             # Scale features
             test_features = X_scaler.transform(np.hstack((spatial_feat, hist_feat, hog_feat)).reshape(1, -1))
