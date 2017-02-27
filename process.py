@@ -100,26 +100,6 @@ def find_cars(img, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
     return draw_img, box_list
 
 
-def process_image(file, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
-                  spatial_features=True, spatial_size=(32, 32),
-                  hist_features=True, hist_bins=32,
-                  hog_features=True, hog_orient=9, hog_pix_per_cell=8, hog_cell_per_block=2, hog_channel=0):
-    img = mpimg.imread(file)
-
-    out_img, _ = find_cars(img, y_start, y_stop, scale, clf, X_scaler,
-                           color_space=color_space,
-                           # Spatial features
-                           spatial_features=spatial_features, spatial_size=spatial_size,
-                           # Hist features
-                           hist_features=hist_features, hist_bins=hist_bins,
-                           # Hog features
-                           hog_features=hog_features, hog_orient=hog_orient, hog_pix_per_cell=hog_pix_per_cell,
-                           hog_cell_per_block=hog_cell_per_block, hog_channel=hog_channel)
-    output_file = output_dir + os.sep + os.path.basename(file)
-    bgr_out_img = cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(output_file, bgr_out_img)
-
-
 def add_heat(heatmap, bbox_list):
     # Iterate through list of bboxes
     for box in bbox_list:
@@ -198,33 +178,15 @@ class CarTracker:
 
         # Add heat to each box in box list
         heat = add_heat(heat, box_list)
-
         # Apply threshold to help remove false positives
         heat = apply_threshold(heat, 1)
-
         # Visualize the heatmap when displaying
         heatmap = np.clip(heat, 0, 255)
-
         # Find final boxes from heatmap using label function
         labels = label(heatmap)
         draw_img = draw_labeled_bboxes(np.copy(img), labels)
 
         return draw_img
-
-
-def process_video(file, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
-                  spatial_features=True, spatial_size=(32, 32),
-                  hist_features=True, hist_bins=32, orient=9,
-                  hog_features=True, pix_per_cell=8, cell_per_block=2, hog_channel=0):
-    tracker = CarTracker(y_start, y_stop, scale, clf, X_scaler, color_space=color_space,
-                         spatial_features=spatial_features, spatial_size=spatial_size,
-                         hist_features=hist_features, hist_bins=hist_bins, hog_orient=orient,
-                         hog_features=hog_features, hog_pix_per_cell=pix_per_cell, hog_cell_per_block=cell_per_block,
-                         hog_channel=hog_channel)
-    clip = VideoFileClip(file)
-    output_clip = clip.fl_image(tracker.next_image)
-    output_file = output_dir + os.sep + os.path.basename(file)
-    output_clip.write_videofile(output_file, audio=False)
 
 
 if __name__ == "__main__":
@@ -238,19 +200,26 @@ if __name__ == "__main__":
 
     files = glob.glob(args.file, recursive=True)
     for file in files:
+        carTracker = CarTracker(y_start, y_stop, scale, data['clf'], data['X_scaler'], color_space=data['color_space'],
+                                spatial_features=data['spatial_features'], spatial_size=data['spatial_size'],
+                                hist_features=data['hist_features'], hist_bins=data['hist_bins'],
+                                hog_features=data['hog_features'], hog_orient=data['hog_orient'],
+                                hog_pix_per_cell=data['hog_pix_per_cell'],
+                                hog_cell_per_block=data['hog_cell_per_block'],
+                                hog_channel=data['hog_channel'])
+
         _, file_extension = os.path.splitext(file)
-        process_fct = None
         if ".jpg" == file_extension.lower():
-            process_fct = process_image
+            img = mpimg.imread(file)
+            out_img = carTracker.next_image(img)
+
+            output_file = output_dir + os.sep + os.path.basename(file)
+            cv2.imwrite(output_file, cv2.cvtColor(out_img, cv2.COLOR_RGB2BGR))
         elif ".mp4" == file_extension.lower():
-            process_fct = process_video
+            clip = VideoFileClip(file)
+            output_clip = clip.fl_image(carTracker.next_image)
+            output_file = output_dir + os.sep + os.path.basename(file)
+            output_clip.write_videofile(output_file, audio=False)
         else:
             print("Unknown file format: " + args.file)
             continue
-
-        process_fct(file, y_start, y_stop, scale, data['clf'], data['X_scaler'], color_space=data['color_space'],
-                    spatial_features=data['spatial_features'], spatial_size=data['spatial_size'],
-                    hist_features=data['hist_features'], hist_bins=data['hist_bins'],
-                    hog_features=data['hog_features'], hog_orient=data['hog_orient'],
-                    hog_pix_per_cell=data['hog_pix_per_cell'], hog_cell_per_block=data['hog_cell_per_block'],
-                    hog_channel=data['hog_channel'])
