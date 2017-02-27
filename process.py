@@ -42,21 +42,21 @@ def find_cars(img, y_start, y_stop, scale, clf, X_scaler, color_space='RGB',
     ch2 = ctrans_tosearch[:, :, 1]
     ch3 = ctrans_tosearch[:, :, 2]
 
+    # Compute individual channel HOG features for the entire image
+    hog1 = get_hog_features(ch1, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
+    hog2 = get_hog_features(ch2, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
+    hog3 = get_hog_features(ch3, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
+
     # Define blocks and steps as above
     nxblocks = (ch1.shape[1] // hog_pix_per_cell) - 1
     nyblocks = (ch1.shape[0] // hog_pix_per_cell) - 1
     nfeat_per_block = hog_orient * hog_cell_per_block ** 2
-    # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
+    # 64 was the original sampling rate, with 8 cells and 8 pix per cell
     window = 64
     nblocks_per_window = (window // hog_pix_per_cell) - 1
     cells_per_step = 2  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
-
-    # Compute individual channel HOG features for the entire image
-    hog1 = get_hog_features(ch1, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
-    hog2 = get_hog_features(ch2, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
-    hog3 = get_hog_features(ch3, hog_orient, hog_pix_per_cell, hog_cell_per_block, feature_vec=False)
 
     for xb in range(nxsteps):
         for yb in range(nysteps):
